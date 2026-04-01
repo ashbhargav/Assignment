@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Analysis Result</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5" style="max-width:620px">
+    <h4 class="mb-4">Analysis Result</h4>
+
+    {% if result.verdict == 'HIGH RISK' %}
+        {% set badge_color = 'danger' %}
+    {% elif result.verdict == 'MEDIUM RISK' %}
+        {% set badge_color = 'warning text-dark' %}
+    {% elif result.verdict == 'LOW RISK' %}
+        {% set badge_color = 'info text-dark' %}
+    {% else %}
+        {% set badge_color = 'success' %}
+    {% endif %}
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body pb-2">
+            <table class="table table-sm mb-0">
+                <tr>
+                    <th class="text-muted fw-normal" style="width:90px">From</th>
+                    <td>{{ result.from }}</td>
+                </tr>
+                <tr>
+                    <th class="text-muted fw-normal">Subject</th>
+                    <td>{{ result.subject }}</td>
+                </tr>
+                <tr>
+                    <th class="text-muted fw-normal">Verdict</th>
+                    <td>
+                        <span class="badge bg-{{ badge_color }}">{{ result.verdict }}</span>
+                        <small class="text-muted ms-2">score: {{ result.score }}</small>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="alert alert-{{ badge_color }} py-2 mb-3">
+        <strong>{{ result.summary }}</strong>
+    </div>
+
+    {% if result.findings %}
+    <div class="card shadow-sm">
+        <div class="card-header bg-white fw-semibold">Detected Indicators</div>
+        <ul class="list-group list-group-flush">
+            {% for cat, msg in result.findings %}
+            <li class="list-group-item d-flex align-items-start gap-2">
+                <span class="badge bg-secondary mt-1" style="min-width:62px;text-align:center">{{ cat }}</span>
+                <span>{{ msg }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% else %}
+    <div class="alert alert-success">No phishing indicators found.</div>
+    {% endif %}
+
+    <a href="/" class="btn btn-outline-secondary mt-3">Analyze another</a>
+</div>
+
+</body>
+</html>

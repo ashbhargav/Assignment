@@ -1,0 +1,18 @@
+From: security@paypa1.com
+Subject: Urgent: Your account has been suspended
+Date: Mon, 30 Mar 2026 09:15:00 +0000
+
+Dear Customer,
+
+Action required: Your PayPal account has been suspended due to suspicious activity.
+
+You must verify your account immediately to restore access. Failure to act now will result in permanent account termination.
+
+Please click the link below to confirm your identity and update your payment information:
+
+http://192.168.10.55/paypal/verify/login
+
+If you do not respond within 24 hours, your account will be closed permanently.
+
+Thank you,
+PayPal Security Team

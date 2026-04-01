@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% if mode == 'vulnerable' %}⚠ Vulnerable Login{% else %}✅ Secure Login{% endif %} — SQLi Demo</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2128;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --blue: #58a6ff;
+      --yellow: #e3b341;
+      --mono: "Courier New", monospace;
+
+
+    body.vulnerable {
+      --accent:     #f85149;
+      --accent-dim: #3a1a1a;
+      --accent-ring:#6e2626;
+      --accent-btn: #da3633;
+    }
+
+    body.secure {
+      --accent:     #3fb950;
+      --accent-dim: #1a3a2a;
+      --accent-ring:#1e4428;
+      --accent-btn: #238636;
+    }
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── Nav ── */
+    nav {
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 40px;
+    }
+
+    .nav-brand {
+      color: var(--blue);
+      font-size: .95rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 8px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      font-size: .8rem;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      transition: border-color .2s, color .2s;
+    }
+
+    .nav-links a:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    /* ── Page header ── */
+    .page-header {
+      width: 100%;
+      max-width: 700px;
+      margin-bottom: 28px;
+    }
+
+    .mode-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-ring);
+      color: var(--accent);
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .page-header h1 {
+      font-size: 1.5rem;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .page-header p {
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.5;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: .78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      font-weight: 600;
+    }
+
+    .card-body {
+      padding: 24px 20px;
+    }
+
+    /* ── Quick-fill buttons ── */
+    .quick-fills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .qbtn {
+      font-size: .78rem;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: border-color .2s, color .2s;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    .qbtn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .qbtn.inject {
+      border-color: var(--accent-ring);
+      color: var(--accent);
+    }
+
+    /* ── Form ── */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: .82rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: .9rem;
+      font-family: var(--mono);
+      transition: border-color .2s;
+      outline: none;
+    }
+
+    .form-control:focus {
+      border-color: var(--blue);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent-btn);
+      color: #fff;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: opacity .15s, transform .1s;
+    }
+
+    .btn-submit:hover {
+      opacity: .85;
+    }
+
+    .btn-submit:active {
+      transform: scale(.98);
+    }
+
+    /* ── SQL Query Box ── */
+    .query-box {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-family: var(--mono);
+      font-size: .8rem;
+      color: var(--muted);
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.6;
+    }
+
+    .query-box .inject-highlight {
+      color: #f85149;
+      font-weight: bold;
+    }
+
+    .query-box .safe-value {
+      color: var(--yellow);
+    }
+
+    .query-box .keyword {
+      color: #79b8ff;
+    }
+
+    /* ── Result banner ── */
+    .result-banner {
+      border-radius: 8px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .result-banner.success {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-ring);
+    }
+
+    .result-banner.failure {
+      background: #1a1a2a;
+      border: 1px solid #30363d;
+    }
+
+    .result-title {
+      font-size: .95rem;
+      font-weight: 700;
+    }
+
+    .result-banner.success .result-title {
+      color: var(--accent);
+    }
+
+    .result-banner.failure .result-title {
+      color: var(--muted);
+    }
+
+    .result-detail {
+      font-size: .83rem;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    /* ── Back link ── */
+    .back {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: .82rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color .2s;
+    }
+
+    .back:hover {
+      color: var(--blue);
+    }
+
+    /* ── Explanation callout ── */
+    .callout {
+      border-left: 3px solid var(--accent);
+      padding: 12px 16px;
+      background: var(--accent-dim);
+      border-radius: 0 8px 8px 0;
+      font-size: .83rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .callout strong {
+      color: var(--text);
+    }
+  </style>
+</head>
+
+<body class="{{ mode }}">
+
+  <nav>
+    <a href="/" class="nav-brand">🔓 SQLi Demo</a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/vulnerable">⚠ Vulnerable</a>
+      <a href="/secure">✅ Secure</a>
+    </div>
+  </nav>
+
+  <!-- ── Page header ── -->
+  <div class="page-header">
+    <div class="mode-badge">
+      {% if mode == 'vulnerable' %}⚠ Vulnerable Mode{% else %}✅ Secure Mode{% endif %}
+    </div>
+    <h1>{% if mode == 'vulnerable' %}Vulnerable Login{% else %}Secure Login{% endif %}</h1>
+    <p>
+      {% if mode == 'vulnerable' %}
+      Input is interpolated directly into the SQL string. Try injecting <strong
+        style="color:#f85149;font-family:monospace">' OR '1'='1</strong> as the username.
+      {% else %}
+      Input is handled via parameterized queries. The same injection payload is <strong
+        style="color:#3fb950">blocked</strong> — the database driver treats it as a literal string.
+      {% endif %}
+    </p>
+  </div>
+
+  <div class="layout">
+
+    <!-- ── Login form ── -->
+    <div class="card">
+      <div class="card-header">Login Form</div>
+      <div class="card-body">
+
+        <!-- Quick-fill helpers -->
+        <div class="quick-fills">
+          <span style="font-size:.78rem;color:var(--muted);align-self:center">Quick fill:</span>
+          <button class="qbtn inject" onclick="fillInject()">💉 SQL Injection payload</button>
+          <button class="qbtn" onclick="fillValid()">👤 Valid credentials</button>
+          <button class="qbtn" onclick="clearForm()">✕ Clear</button>
+        </div>
+
+        <form id="loginForm" method="POST">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input class="form-control" type="text" id="username" name="username"
+              value="{{ request.form.get('username', '') }}" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input class="form-control" type="text" id="password" name="password"
+              value="{{ request.form.get('password', '') }}" autocomplete="off" />
+          </div>
+          <button class="btn-submit" type="submit">
+            {% if mode == 'vulnerable' %}Attempt Login (Vulnerable){% else %}Attempt Login (Secure){% endif %}
+          </button>
+        </form>
+      </div>
+    </div>
+
+    {% if result %}
+    <!-- ── Result ── -->
+    <div class="card">
+      <div class="card-header">Result</div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:16px">
+
+        <div class="result-banner {{ 'success' if result.success else 'failure' }}">
+          <div class="result-title">
+            {% if result.success %}
+            {% if mode == 'vulnerable' %}🚨 BYPASS SUCCESSFUL — Authentication bypassed via SQL injection{% else %}⚠
+            Login succeeded (valid credentials provided){% endif %}
+            {% else %}
+            {% if mode == 'vulnerable' %}✋ Login failed{% else %}🛡 Injection BLOCKED — parameterized query rejected the
+            payload{% endif %}
+            {% endif %}
+          </div>
+          {% if result.success and result.user %}
+          <div class="result-detail">Logged in as: {{ result.user.username }} | Role: {{ result.user.role }}</div>
+          {% endif %}
+          {% if result.get('error') %}
+          <div class="result-detail" style="color:#f85149">DB Error: {{ result.error }}</div>
+          {% endif %}
+        </div>
+
+        <!-- ── SQL query display ── -->
+        <div>
+          <div
+            style="font-size:.75rem;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">
+            SQL Query Executed
+          </div>
+          <div class="query-box" id="queryBox">{{ result.query }}</div>
+        </div>
+
+        <!-- ── Why explanation ── -->
+        <div class="callout">
+          {% if mode == 'vulnerable' and result.success %}
+          <strong>Why this worked:</strong> The input <code style="color:#f85149">' OR '1'='1</code> closed the
+          <code>username</code> string literal early and injected a condition that is always true
+          (<code>'1'='1'</code>). The database returned the first matching row — the admin — without verifying any
+          password.
+          {% elif mode == 'vulnerable' and not result.success %}
+          <strong>No match:</strong> The injection didn't match a condition that returns a row, or the payload wasn't
+          structured correctly. Try <code style="color:#f85149">' OR '1'='1</code> in the username field.
+          {% elif mode == 'secure' and result.success %}
+          <strong>Why this is safe:</strong> Even though login succeeded, the input is always treated as a literal
+          string by the database driver. The <code>?</code> placeholder is bound after the SQL is compiled — there is no
+          SQL structure to inject into.
+          {% else %}
+          <strong>Why the injection was blocked:</strong> The parameterized query compiles the SQL structure first, then
+          binds values. The payload <code style="color:#f85149">' OR '1'='1</code> is passed as a plain string — the
+          database looks for a user literally named <code>' OR '1'='1</code>, finds none, and denies access.
+          {% endif %}
+        </div>
+
+        <a href="{{ '/' + mode }}" class="back">← Try again</a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if not result %}
+    <!-- ── Callout before first attempt ── -->
+    <div class="callout">
+      {% if mode == 'vulnerable' %}
+      <strong>What to do:</strong> Click <em>"SQL Injection payload"</em> above to pre-fill the classic attack, then
+      click Login. Watch how the SQL query changes and how authentication is bypassed without any valid credentials.
+      {% else %}
+      <strong>What to do:</strong> Click <em>"SQL Injection payload"</em> to pre-fill the same attack used on the
+      vulnerable form. The secure form will reject it because parameterized queries treat all input as data, never as
+      SQL syntax.
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div>
+
+  <script>
+    function fillInject() {
+      document.getElementById('username').value = "' OR '1'='1' --";
+      document.getElementById('password').value = "";
+    }
+    function fillValid() {
+      document.getElementById('username').value = "admin";
+      document.getElementById('password').value = "password";
+    }
+    function clearForm() {
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+    }
+
+    // Highlight the injected fragment in the query display
+    (function highlightQuery() {
+      const box = document.getElementById('queryBox');
+      if (!box) return;
+      let html = box.textContent;
+      // highlight SQL keywords
+      ['SELECT', 'FROM', 'WHERE', 'AND', 'OR'].forEach(kw => {
+        html = html.replace(new RegExp('\\b' + kw + '\\b', 'g'), `<span class="keyword">${kw}</span>`);
+      });
+      // highlight the injection payload
+      html = html.replace(/(' OR '1'='1[^']*')/g, '<span class="inject-highlight">$1</span>');
+      // highlight quoted string values
+      html = html.replace(/'([^']*)'/g, (m, inner) => {
+        if (inner.includes('OR') || inner.includes('1')) return m; // already highlighted
+        return `'<span class="safe-value">${inner}</span>'`;
+      });
+      box.innerHTML = html;
+    })();
+  </script>
+
+</body>
+
+</html>

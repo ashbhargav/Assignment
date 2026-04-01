@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# macOS
+.DS_Store
+
+# SQLite database (seeded fresh on first run)
+*.db
+
+# Log output — directory structure is kept via .gitkeep
+Malware/logs/*.log
+Malware/logs/.reset
+sql_injection/logs/
+
+# Assignment PDF (don't send the question paper back)
+*.pdf
